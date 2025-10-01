@@ -57,7 +57,7 @@ class SnakeLadderGame:
 
     def draw_tokens(self):
         self.canvas.delete("token")
-        colors = ["red", "blue"]
+        colors = ["#0003c2", "#ff0062"]
         for i, pos in enumerate(self.positions):
             if pos == 0:
                 continue

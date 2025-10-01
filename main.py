@@ -25,3 +25,84 @@ class SnakeLadderGame:
                         foreground='white',
                         background="#B40519",
                         padding='10')
+        style.map('Roll.TButton',
+                  background=[('active', '#B40519')])
+        
+        self.positions = [0, 0]
+        self.current_player = 0
+
+        self.dice_images = [ImageTk.PhotoImage(Image.open(f"dicefaces/{i}.png").resize((50, 50))) for i in range(1, 7)]
+
+        self.roll_btn = ttk.Button(root, text="Roll Dice", style='Roll.TButton', command=self.roll_dice)
+        self.roll_btn.pack(pady=10)
+
+        self.status = tk.Label(root, text="Player 1's turn", font=('Helvetica', 14))
+        self.status.pack()
+
+        self.dice_label = tk.Label(root)
+        self.dice_label.pack(pady=5)
+
+        self.draw_tokens()
+
+    def get_coords(self, square):
+        if square < 1 or square > 100:
+            return None
+        num = square - 1
+        row = 9 - (num // 10)
+        col = num % 10 if row % 2 != 0 else 9 - (num % 10)
+        cell_size = self.board_img.width // 10
+        x = col * cell_size + cell_size // 2
+        y = row * cell_size + cell_size // 2
+        return x, y
+    
+    def draw_tokens(self):
+        self.canvas.delete("token")
+        colors = ["#0003c2", "#ff0062"]
+        for i, pos in enumerate(self.positions):
+            if pos == 0:
+                continue
+            x, y = self.get_coords(pos)
+            r = 15
+            self.canvas.create_oval(x - r + i * 10, y - r, r + i * 10, y + r, fill=colors[i], tags="token")
+
+    def animate_dice(self, callback):
+        rolls = 10
+        def roll_animation(count=0):
+            if count < rolls:
+                face = random.randint(1, 6)
+                self.dice_label.config(image=self.dice_images[face-1])
+                self.root.after(100, roll_animation, count + 1)
+            else:
+                callback
+        roll_animation()
+    
+    def roll_dice(self):
+        self.roll_btn.config(state="disabled")
+        self.status.config(text=f"Player {self.current_player + 1} is rolling...")
+        self.animate_dice(self.after_dice_roll)
+
+    def after_dice_roll(self):
+        dice = random.randint(1, 6)
+        self.dice_label.config(image=self.dice_images[dice-1])
+        self.status.config(text=f"Player {self.current_player + 1} rolled a {dice}")
+        self.move_player_smooth(dice)
+
+    def move_player_smooth(self, dice):
+        start = self.positions[self.current_player]
+        path = []
+
+        for step in range(1, dice + 1):
+            next_pos = start + step
+            if next_pos > 100:
+                next_pos = start
+                break
+            path.append(next_pos)
+
+        def move_step(i=0):
+            if i < len(path):
+                pos = path[i]
+                self.positions[self.current_player] = pos
+                self.draw_tokens()
+                self.root.after(300, move_step, i+1)
+            else:
+                pass
